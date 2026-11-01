@@ -343,6 +343,22 @@ describe('Workspace Memory v2 routes', () => {
     ).toHaveLength(1);
   });
 
+  test('multi-term FTS search matches terms separated by other words', async () => {
+    const created = await create(
+      WORKSPACE_A,
+      'SQLite canonical storage makes local recovery simple',
+    );
+
+    const searched = await request(
+      route(WORKSPACE_A, '/search?q=SQLite%20recovery'),
+    );
+
+    expect(searched.status).toBe(200);
+    expect(searched.body.hits.map((hit: any) => hit.item.id)).toEqual([
+      created.body.item.id,
+    ]);
+  });
+
   test('forget creates a tombstone/version and removes the item from recall', async () => {
     const created = await create(WORKSPACE_A, 'temporary launch password');
     const itemId = created.body.item.id;

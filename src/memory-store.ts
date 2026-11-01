@@ -1757,6 +1757,14 @@ function ftsPhrase(query: string): string {
   return `"${query.replaceAll('"', '""')}"`;
 }
 
+function ftsQuery(query: string): string {
+  const terms = query.split(/\s+/).filter(Boolean);
+  if (terms.length > 1 && terms.every((term) => [...term].length >= 3)) {
+    return terms.map(ftsPhrase).join(' AND ');
+  }
+  return ftsPhrase(query);
+}
+
 export function searchWorkspaceMemoryItems(input: {
   workspaceJid: string;
   query: string;
@@ -1810,7 +1818,7 @@ export function searchWorkspaceMemoryItems(input: {
          ORDER BY search_rank ASC, i.importance DESC, i.updated_at DESC
          LIMIT ?`,
       )
-      .all(...params, ftsPhrase(query), input.limit) as Array<
+      .all(...params, ftsQuery(query), input.limit) as Array<
       MemoryItemRow & { search_rank: number; search_snippet: string }
     >;
   } else {
